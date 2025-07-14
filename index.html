@@ -95,28 +95,39 @@
       <p id="status"></p>
     </div>
 
-  <script>
+ <script>
   let locationReady = false;
 
-  navigator.geolocation.getCurrentPosition(
-    function (position) {
-      document.getElementById("latitude").value = position.coords.latitude;
-      document.getElementById("longitude").value = position.coords.longitude;
-      locationReady = true;
-    },
-    function (error) {
-      alert("Location access is required for attendance check-in.");
+  function getLocation(callback) {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
     }
-  );
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        document.getElementById("latitude").value = position.coords.latitude;
+        document.getElementById("longitude").value = position.coords.longitude;
+        locationReady = true;
+        callback();
+      },
+      function (error) {
+        alert("Location access denied or unavailable.");
+      }
+    );
+  }
 
   document.getElementById("attendance-form").addEventListener("submit", function (e) {
     e.preventDefault();
 
     if (!locationReady) {
-      alert("Please allow location access before submitting the form.");
-      return;
+      getLocation(() => submitData());
+    } else {
+      submitData();
     }
+  });
 
+  function submitData() {
     const data = {
       name: document.getElementById("name").value,
       id: document.getElementById("id").value,
@@ -133,11 +144,12 @@
     .then(result => {
       document.getElementById("status").innerText = "✅ Check-in successful!";
       document.getElementById("attendance-form").reset();
+      locationReady = false; // reset state for next user
     })
     .catch(error => {
       document.getElementById("status").innerText = "❌ Error submitting check-in.";
     });
-  });
+  }
 </script>
 
   </body>
