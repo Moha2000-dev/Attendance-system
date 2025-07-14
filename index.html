@@ -95,49 +95,50 @@
       <p id="status"></p>
     </div>
 
-    <script>
-      navigator.geolocation.getCurrentPosition(
-        function (position) {
-          document.getElementById("latitude").value = position.coords.latitude;
-          document.getElementById("longitude").value =
-            position.coords.longitude;
-        },
-        function (error) {
-          alert("Location access is required for attendance check-in.");
-        }
-      );
+  <script>
+  let locationReady = false;
 
-      document
-        .getElementById("attendance-form")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      document.getElementById("latitude").value = position.coords.latitude;
+      document.getElementById("longitude").value = position.coords.longitude;
+      locationReady = true;
+    },
+    function (error) {
+      alert("Location access is required for attendance check-in.");
+    }
+  );
 
-          const data = {
-            name: document.getElementById("name").value,
-            id: document.getElementById("id").value,
-            gender: document.getElementById("gender").value,
-            latitude: document.getElementById("latitude").value,
-            longitude: document.getElementById("longitude").value,
-          };
+  document.getElementById("attendance-form").addEventListener("submit", function (e) {
+    e.preventDefault();
 
-          fetch(
-            "https://script.google.com/macros/s/AKfycbzx8IM8RF5YjQXzRig2G1ww6ZavtyEduw6AHBp0DXomPduPt5sDRLAtH24EADW4ra702w/exec",
-            {
-              method: "POST",
-              body: JSON.stringify(data),
-            }
-          )
-            .then((response) => response.text())
-            .then((result) => {
-              document.getElementById("status").innerText =
-                "✅ Check-in successful!";
-              document.getElementById("attendance-form").reset();
-            })
-            .catch((error) => {
-              document.getElementById("status").innerText =
-                "❌ Error submitting check-in.";
-            });
-        });
-    </script>
+    if (!locationReady) {
+      alert("Please allow location access before submitting the form.");
+      return;
+    }
+
+    const data = {
+      name: document.getElementById("name").value,
+      id: document.getElementById("id").value,
+      gender: document.getElementById("gender").value,
+      latitude: document.getElementById("latitude").value,
+      longitude: document.getElementById("longitude").value
+    };
+
+    fetch("https://script.google.com/macros/s/AKfycbzx8IM8RF5YjQXzRig2G1ww6ZavtyEduw6AHBp0DXomPduPt5sDRLAtH24EADW4ra702w/exec", {
+      method: "POST",
+      body: JSON.stringify(data)
+    })
+    .then(response => response.text())
+    .then(result => {
+      document.getElementById("status").innerText = "✅ Check-in successful!";
+      document.getElementById("attendance-form").reset();
+    })
+    .catch(error => {
+      document.getElementById("status").innerText = "❌ Error submitting check-in.";
+    });
+  });
+</script>
+
   </body>
 </html>
