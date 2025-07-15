@@ -1,170 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Attendance Check-In</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
-
-      .container {
-        background: #fff;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        width: 100%;
-        max-width: 400px;
-      }
-
-      h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #333;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 5px;
-        color: #555;
-      }
-
-      input[type="text"],
-      select {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
-
-      button {
-        width: 100%;
-        background-color: #007bff;
-        color: white;
-        padding: 12px;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background-color: #0056b3;
-      }
-
-      #status {
-        margin-top: 15px;
-        text-align: center;
-        color: green;
-        font-weight: bold;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h2>Attendance Check-In</h2>
-      <form id="attendance-form">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required />
-
-       <label for="id">ID:</label>
-<input type="text" id="id" name="id" required pattern="[0-9]*" inputmode="numeric" />
-
-
-
-
-
-        <label for="gender">Gender:</label>
-        <select id="gender" name="gender" required>
-          <option value="">Select</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-
-        <input type="hidden" id="latitude" name="latitude" />
-        <input type="hidden" id="longitude" name="longitude" />
-
-        <button type="submit">Submit</button>
-      </form>
-
-      <p id="status"></p>
-    </div>
-
-<script>
-  let locationReady = false;
-
-  function getLocation(callback, errorCallback) {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      errorCallback();
-      return;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spark Attendance</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      function (position) {
-        document.getElementById("latitude").value = position.coords.latitude;
-        document.getElementById("longitude").value = position.coords.longitude;
-        locationReady = true;
-        callback();
-      },
-      function (error) {
-        alert("⚠️ Location access denied or unavailable. Check-in cannot proceed.");
-        errorCallback();
-      }
-    );
-  }
-
-  document.getElementById("attendance-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    if (!locationReady) {
-      getLocation(
-        () => submitData(),         // success: submit form
-        () => showError()           // failure: show error, do nothing
-      );
-    } else {
-      submitData();
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
     }
-  });
+    h2 {
+      margin: 0 0 0.5rem 0;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #222;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    label {
+      font-size: 0.9rem;
+      color: #555;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+      appearance: textfield;
+    }
+    input::-webkit-inner-spin-button,
+    input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      background-color: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #3730a3;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .status-success {
+      background-color: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .status-error {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Spark Attendance</h2>
+    <div class="subtitle">📍 Location-based check-in</div>
+    <form id="attendance-form">
+      <label for="name">Name *</label>
+      <input type="text" id="name" required placeholder="Enter your full name">
 
-  function submitData() {
-    const data = {
-      name: document.getElementById("name").value,
-      id: document.getElementById("id").value,
-      gender: document.getElementById("gender").value,
-      latitude: document.getElementById("latitude").value,
-      longitude: document.getElementById("longitude").value
+      <label for="id">ID *</label>
+      <input type="text" id="id" required inputmode="numeric" pattern="[0-9]*" placeholder="Enter your ID number">
+
+      <label for="gender">Gender *</label>
+      <select id="gender" required>
+        <option value="">Select your gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+
+      <input type="hidden" id="latitude">
+      <input type="hidden" id="longitude">
+
+      <button type="submit" id="submit-btn">Submit</button>
+
+      <div id="status"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('attendance-form');
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    const resetStatus = () => {
+      statusEl.textContent = '';
+      statusEl.className = '';
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbzx8IM8RF5YjQXzRig2G1ww6ZavtyEduw6AHBp0DXomPduPt5sDRLAtH24EADW4ra702w/exec", {
-      method: "POST",
-      body: JSON.stringify(data)
-    })
-    .then(response => response.text())
-    .then(result => {
-      document.getElementById("status").innerText = "✅ Check-in successful!";
-      document.getElementById("attendance-form").reset();
-      locationReady = false; // reset for next user
-    })
-    .catch(error => {
-      document.getElementById("status").innerText = "❌ Error submitting check-in.";
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetStatus();
+
+      const name = document.getElementById('name').value.trim();
+      const id = document.getElementById('id').value.trim();
+      const gender = document.getElementById('gender').value;
+      const latitudeEl = document.getElementById('latitude');
+      const longitudeEl = document.getElementById('longitude');
+
+      if (!/^\d+$/.test(id)) {
+        statusEl.textContent = 'ID must contain only numbers.';
+        statusEl.className = 'status status-error';
+        return;
+      }
+
+      if (!name || !id || !gender) {
+        statusEl.textContent = 'Please fill in all required fields.';
+        statusEl.className = 'status status-error';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000
+          });
+        });
+
+        latitudeEl.value = position.coords.latitude;
+        longitudeEl.value = position.coords.longitude;
+
+        await fetch('https://script.google.com/macros/s/AKfycbzx8IM8RF5YjQXzRig2G1ww6ZavtyEduw6AHBp0DXomPduPt5sDRLAtH24EADW4ra702w/exec', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            id: id,
+            gender: gender,
+            latitude: latitudeEl.value,
+            longitude: longitudeEl.value
+          })
+        });
+
+        statusEl.textContent = '✅ Check-in successful!';
+        statusEl.className = 'status status-success';
+        form.reset();
+      } catch (err) {
+        statusEl.textContent = '❌ Location required to check-in.';
+        statusEl.className = 'status status-error';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+      }
     });
-  }
 
-  function showError() {
-    document.getElementById("status").innerText = "❌ Location required. Check-in cancelled.";
-  }
-</script>
-
-
-  </body>
+    document.getElementById('id').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+    });
+  </script>
+</body>
 </html>
+
