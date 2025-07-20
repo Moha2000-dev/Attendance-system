@@ -6,13 +6,13 @@
   <title>Spark Attendance</title>
   <style>
     body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: sans-serif;
       background: #f9fafb;
-      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      margin: 0;
       padding: 1rem;
     }
     .card {
@@ -24,11 +24,8 @@
       padding: 2rem;
     }
     h2 {
-      margin: 0 0 0.5rem 0;
       text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #222;
+      margin-bottom: 0.5rem;
     }
     .subtitle {
       text-align: center;
@@ -36,39 +33,28 @@
       color: #6b7280;
       margin-bottom: 1.5rem;
     }
-    label {
-      font-size: 0.9rem;
-      color: #555;
-      display: block;
-      margin-bottom: 0.3rem;
-    }
-    input, select {
-      width: 100%;
-      padding: 0.7rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-      box-sizing: border-box;
-      appearance: textfield;
-    }
-    button {
+    input, select, button {
       width: 100%;
       padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
       font-size: 1rem;
+    }
+    button {
       background-color: #4f46e5;
       color: #fff;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
     }
     button:hover {
       background-color: #3730a3;
     }
     .status {
-      margin-top: 1rem;
-      font-size: 0.9rem;
       text-align: center;
+      font-size: 0.9rem;
+      margin-top: 1rem;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
@@ -119,7 +105,7 @@
       const gender = document.getElementById('gender').value;
 
       if (!visitorId) {
-        statusEl.textContent = "Could not get device fingerprint.";
+        statusEl.textContent = "Fingerprint unavailable. Please refresh.";
         return;
       }
 
@@ -134,14 +120,19 @@
         const response = await fetch("YOUR_SCRIPT_URL_HERE", {
           method: "POST",
           body: JSON.stringify({
-            name, id, gender, latitude, longitude, fingerprint: visitorId
+            name,
+            id,
+            gender,
+            latitude,
+            longitude,
+            fingerprint: visitorId
           })
         });
 
         const text = await response.text();
         statusEl.textContent = text;
       } catch (err) {
-        statusEl.textContent = "Location access required.";
+        statusEl.textContent = "Location permission required.";
       }
     });
   </script>
