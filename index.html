@@ -35,10 +35,6 @@
       font-size: 0.85rem;
       color: #6b7280;
       margin-bottom: 1.5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.3rem;
     }
     label {
       font-size: 0.9rem;
@@ -56,11 +52,6 @@
       box-sizing: border-box;
       appearance: textfield;
     }
-    input::-webkit-inner-spin-button,
-    input::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
     button {
       width: 100%;
       padding: 0.75rem;
@@ -70,33 +61,14 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s;
     }
     button:hover {
       background-color: #3730a3;
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
     .status {
       margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 6px;
       font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .status-success {
-      background-color: #ecfdf5;
-      color: #065f46;
-      border: 1px solid #a7f3d0;
-    }
-    .status-error {
-      background-color: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
+      text-align: center;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
@@ -107,117 +79,70 @@
     <div class="subtitle">📍 Location-based check-in</div>
     <form id="attendance-form">
       <label for="name">Name *</label>
-      <input type="text" id="name" required placeholder="Enter your full name">
+      <input type="text" id="name" required>
 
       <label for="id">ID *</label>
-      <input type="text" id="id" required inputmode="numeric" pattern="[0-9]*" placeholder="Enter your ID number">
+      <input type="text" id="id" required inputmode="numeric" pattern="[0-9]*">
 
       <label for="gender">Gender *</label>
       <select id="gender" required>
-        <option value="">Select your gender</option>
+        <option value="">Select</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
       </select>
 
-      <input type="hidden" id="latitude">
-      <input type="hidden" id="longitude">
-
-      <button type="submit" id="submit-btn">Submit</button>
-
+      <button type="submit">Submit</button>
       <div id="status"></div>
     </form>
   </div>
 
   <script>
-    const form = document.getElementById('attendance-form');
-    const statusEl = document.getElementById('status');
-    const submitBtn = document.getElementById('submit-btn');
-
     let visitorId = '';
-
     const fpPromise = FingerprintJS.load();
 
     fpPromise
       .then(fp => fp.get())
       .then(result => {
         visitorId = result.visitorId;
-        console.log('Visitor ID:', visitorId);
+        console.log("Fingerprint:", visitorId);
       });
 
-    const resetStatus = () => {
-      statusEl.textContent = '';
-      statusEl.className = '';
-    };
+    const form = document.getElementById('attendance-form');
+    const statusEl = document.getElementById('status');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      resetStatus();
+      statusEl.textContent = "Submitting...";
 
       const name = document.getElementById('name').value.trim();
       const id = document.getElementById('id').value.trim();
       const gender = document.getElementById('gender').value;
-      const latitudeEl = document.getElementById('latitude');
-      const longitudeEl = document.getElementById('longitude');
-
-      if (!/^\d+$/.test(id)) {
-        statusEl.textContent = 'ID must contain only numbers.';
-        statusEl.className = 'status status-error';
-        return;
-      }
-
-      if (!name || !id || !gender) {
-        statusEl.textContent = 'Please fill in all required fields.';
-        statusEl.className = 'status status-error';
-        return;
-      }
 
       if (!visitorId) {
-        statusEl.textContent = 'Unable to get device fingerprint. Please try again.';
-        statusEl.className = 'status status-error';
+        statusEl.textContent = "Could not get device fingerprint.";
         return;
       }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
 
       try {
         const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000
-          });
+          navigator.geolocation.getCurrentPosition(resolve, reject);
         });
 
-        latitudeEl.value = position.coords.latitude;
-        longitudeEl.value = position.coords.longitude;
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-        await fetch('https://script.google.com/macros/s/AKfycbzx8IM8RF5YjQXzRig2G1ww6ZavtyEduw6AHBp0DXomPduPt5sDRLAtH24EADW4ra702w/exec', {
-          method: 'POST',
+        const response = await fetch("YOUR_SCRIPT_URL_HERE", {
+          method: "POST",
           body: JSON.stringify({
-            name: name,
-            id: id,
-            gender: gender,
-            latitude: latitudeEl.value,
-            longitude: longitudeEl.value,
-            fingerprint: visitorId
+            name, id, gender, latitude, longitude, fingerprint: visitorId
           })
         });
 
-        statusEl.textContent = '✅ Check-in successful!';
-        statusEl.className = 'status status-success';
-        form.reset();
+        const text = await response.text();
+        statusEl.textContent = text;
       } catch (err) {
-        console.error(err);
-        statusEl.textContent = '❌ Location required to check-in.';
-        statusEl.className = 'status status-error';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
+        statusEl.textContent = "Location access required.";
       }
-    });
-
-    document.getElementById('id').addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '');
     });
   </script>
 </body>
